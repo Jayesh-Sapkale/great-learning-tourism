@@ -4,40 +4,40 @@ import joblib
 import os
 
 st.set_page_config(
-    page_title="Visit with Us - Wellness Tourism Predictor",
-    page_icon="🏖️",
+    page_title="Visit with Us - Wellness Tourism Package Predictor",
+    page_icon="✈️",
     layout="wide"
 )
 
-st.title("'Visit with Us' — Wellness Tourism Package Predictor")
+st.title("✈️ 'Visit with Us' — Wellness Tourism Package Propensity Predictor")
 st.markdown(
-    "Automated MLOps Decision Support System to predict customer propensity "
-    "to purchase the newly introduced **Wellness Tourism Package** before launching sales outreach."
+    "Automated predictive MLOps system to identify high-propensity buyers for the **Wellness Tourism Package** "
+    "before sales outreach campaigns."
 )
 
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "best_model.joblib")
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(CURRENT_DIR, "best_model.joblib")
 
 @st.cache_resource
 def load_model():
     if not os.path.exists(MODEL_PATH):
-        st.error(f"Model file not found at {MODEL_PATH}. Ensure the CI/CD pipeline has trained and pushed the model.")
+        st.error(f"Model file not found at {MODEL_PATH}. Please ensure CI/CD pipeline has trained and committed the model.")
         return None
     return joblib.load(MODEL_PATH)
 
 pipeline = load_model()
 
 st.sidebar.header("Customer Profile Inputs")
-
 with st.sidebar:
-    age = st.slider("Age", 18, 70, 35)
+    age = st.slider("Age", 18, 70, 36)
     gender = st.selectbox("Gender", ["Male", "Female"])
     marital_status = st.selectbox("Marital Status", ["Single", "Married", "Divorced"])
     occupation = st.selectbox("Occupation", ["Salaried", "Small Business", "Large Business", "Free Lancer"])
     designation = st.selectbox("Designation", ["Executive", "Manager", "Senior Manager", "AVP", "VP"])
     city_tier = st.selectbox("City Tier", [1, 2, 3], index=0)
-    monthly_income = st.number_input("Monthly Income (₹)", min_value=1000.0, max_value=150000.0, value=25000.0, step=1000.0)
+    monthly_income = st.number_input("Monthly Income (₹)", min_value=1000.0, max_value=150000.0, value=22400.0, step=1000.0)
 
-st.subheader("✈️ Travel & Interaction Details")
+st.subheader("Travel Preferences & Sales Pitch Interaction")
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -57,7 +57,6 @@ with col3:
     passport = st.radio("Valid Passport Holder?", [0, 1], format_func=lambda x: "Yes" if x == 1 else "No")
     own_car = st.radio("Owns a Car?", [0, 1], format_func=lambda x: "Yes" if x == 1 else "No")
 
-# Build inference DataFrame matching exact schema
 input_dict = {
     'Age': [age],
     'TypeofContact': [typeof_contact],
@@ -85,13 +84,13 @@ st.divider()
 st.subheader("Input Feature Vector Preview")
 st.dataframe(input_df, use_container_width=True)
 
-if st.button("Predict Purchase Propensity", type="primary"):
+if st.button("Predict Purchase Likelihood", type="primary"):
     if pipeline is not None:
         prediction = pipeline.predict(input_df)[0]
         prob = pipeline.predict_proba(input_df)[0][1]
-        
+
         st.subheader("Inference Result")
         if prediction == 1:
-            st.success(f"**High Propensity to Buy!** \n\nProbability of Purchase: **{prob * 100:.2f}%**\n\n**Action:** Prioritize this customer for sales outreach.")
+            st.success(f"**High Propensity to Buy!**\n\nProbability of Purchase: **{prob * 100:.2f}%**\n\n**Recommendation:** Direct sales outreach recommended.")
         else:
-            st.warning(f"**Low Propensity to Buy.** \n\nProbability of Purchase: **{prob * 100:.2f}%**\n\n**Action:** Target with nurturing awareness campaigns before sales calls.")
+            st.warning(f"**Low Propensity to Buy.**\n\nProbability of Purchase: **{prob * 100:.2f}%**\n\n**Recommendation:** Include in general nurturing campaigns before direct sales calls.")
