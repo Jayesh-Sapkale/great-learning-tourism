@@ -17,7 +17,8 @@ def train_and_register(data_dir=".", model_output_dir="tourism_project/deploymen
     y_train = pd.read_csv(os.path.join(data_dir, "ytrain.csv")).squeeze()
     y_test = pd.read_csv(os.path.join(data_dir, "ytest.csv")).squeeze()
     
-    cat_cols = X_train.select_dtypes(include=['object']).columns.tolist()
+    # Explicitly include 'object' and 'string' to resolve Pandas4Warning
+    cat_cols = X_train.select_dtypes(include=['object', 'string']).columns.tolist()
     num_cols = X_train.select_dtypes(include=['int64', 'float64']).columns.tolist()
     
     # Preprocessing Pipeline
@@ -61,7 +62,13 @@ def train_and_register(data_dir=".", model_output_dir="tourism_project/deploymen
         mlflow.log_metric("precision", precision)
         mlflow.log_metric("recall", recall)
         mlflow.log_metric("roc_auc", roc_auc)
-        mlflow.sklearn.log_model(best_pipeline, "best_model")
+        
+        # Fix: Trust tree types so skops serialization does not throw an exception
+        mlflow.sklearn.log_model(
+            sk_model=best_pipeline,
+            name="best_model",
+            skops_trusted_types=["sklearn.tree._tree.Tree"]
+        )
         
         print("\n" + "=" * 60)
         print("BEST MODEL EVALUATION ON UNSEEN TEST DATA")
